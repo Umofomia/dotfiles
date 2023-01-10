@@ -17,12 +17,12 @@ dotfiles fetch
 dotfiles branch --set-upstream-to=origin/master master
 
 if ! checkout_errors=$(dotfiles checkout 2>&1); then
-  echo "Backing up pre-existing dotfiles..."
+  backup_dir="dotfiles-backup-$(date +%s)"
+  echo "Backing up pre-existing dotfiles to ${backup_dir}..."
   for dotfile in $(printf '%s\n' "${checkout_errors}" | grep "^\t" | cut -f2); do
     echo "${dotfile}"
-    mkdir -p ".dotfiles-backup/$(dirname "${dotfile}")"
-    mv "${dotfile}" ".dotfiles-backup/${dotfile}"
+    mkdir -p "${backup_dir}/$(dirname "${dotfile}")"
+    mv "${dotfile}" "${backup_dir}/${dotfile}"
   done
   dotfiles checkout
 fi
-
