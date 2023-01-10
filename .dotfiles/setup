@@ -1,13 +1,28 @@
 #!/usr/bin/env sh
 
-set -euxo pipefail
+set -eu
 
 cd "${HOME}"
-git clone --bare git@github.com:Umofomia/dotfiles.git "${HOME}/.dotfiles.git"
+dotfiles_git_dir="${HOME}/.dotfiles.git"
+
+git clone --bare git@github.com:Umofomia/dotfiles.git "${dotfiles_git_dir}"
 
 dotfiles() {
-  git --git-dir="${HOME}/.dotfiles.git" --work-tree="${HOME}" $@
+  git --git-dir="${dotfiles_git_dir}" --work-tree="${HOME}" "$@"
 }
 
 dotfiles config --local status.showUntrackedFiles no
-dotfiles checkout
+dotfiles config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+dotfiles fetch
+dotfiles branch --set-upstream-to=origin/master master
+
+if ! checkout_errors=$(dotfiles checkout 2>&1); then
+  echo "Backing up pre-existing dotfiles..."
+  for dotfile in $(printf '%s\n' "${checkout_errors}" | grep "^\t" | cut -f2); do
+    echo "${dotfile}"
+    mkdir -p ".dotfiles-backup/$(dirname "${dotfile}")"
+    mv "${dotfile}" ".dotfiles-backup/${dotfile}"
+  done
+  dotfiles checkout
+fi
+
