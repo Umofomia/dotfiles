@@ -3,50 +3,99 @@
 # Exit the script immediately on error.
 set -eu
 
-# Define some color escape sequences to use later in output.
-reset=$(tput sgr0)
-green=$(tput setaf 2)
-yellow=$(tput setaf 3)
+readonly DOTFILES_GIT_DIR="${HOME}/.dotfiles.git"
 
-# Set up the dotfiles repo as a bare git repo managed in ~/.dotfiles.git.
-cd "${HOME}"
-dotfiles_git_dir="${HOME}/.dotfiles.git"
-git clone --bare git@github.com:Umofomia/dotfiles.git "${dotfiles_git_dir}"
+main() {
+  # Set up the dotfiles repo as a bare git repo managed in ~/.dotfiles.git.
+  cd "${HOME}"
+  git clone --bare git@github.com:Umofomia/dotfiles.git "${DOTFILES_GIT_DIR}"
 
-# Create a function to facilitate interfacing with the dotfiles repo.
-dotfiles() {
-  git --git-dir="${dotfiles_git_dir}" --work-tree="${HOME}" "$@"
+  # Don't show untracked files in the `git status` output.
+  dotfiles config --local status.showUntrackedFiles no
+
+  # Configure fetching remote refs, since `git clone --bare` skips this.
+  dotfiles config --local remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+
+  # Fetch all remote refs and configure the master branch to track its remote.
+  dotfiles fetch origin
+  dotfiles branch --set-upstream-to=origin/master master
+
+  # Because `git clone --bare` does not check out the working tree and create
+  # the index, the staging area at this point will appear to indicate that all
+  # files tracked by the repo are staged for removal. To address this, reset
+  # the index and update the working tree by populating the files from the
+  # repo. By default, `git reset` will not overwrite pre-existing files in the
+  # working tree. This is better than using `git checkout`, which fails when
+  # there are any pre-existing files that also exist in the repo.
+  dotfiles reset HEAD
+
+  # Any pre-existing files that differ from those in the repo will now appear
+  # to be unstaged modifications. Stash them so that their contents can later
+  # be restored if desired.
+  if ! dotfiles diff-index --quiet HEAD --; then
+    dotfiles stash push -m "Backup of pre-existing dotfiles"
+  
+    #####
+print_notification <<NOTIFICATION
+
+The following pre-existing files were stashed:
+$(dotfiles stash show --name-only | sed 's/^/\t/')
+Use \`dotfiles stash\` to work with these stashed files.
+NOTIFICATION
+    #####
+  fi
 }
 
-# Don't show untracked files in the `git status` output.
-dotfiles config --local status.showUntrackedFiles no
+finish() {
+  exit_code=$?
+  if [ "${exit_code}" -eq 0 ]; then
+    #####
+print_success <<SUCCESS
 
-# Configure fetching remote refs, since `git clone --bare` skips this.
-dotfiles config --local remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+Dotfiles setup complete!
+You may need to start a new terminal for some settings to take effect.
+SUCCESS
+    #####
+  else
+    #####
+print_error <<ERROR
 
-# Fetch all remote refs and configure the master branch to track its remote.
-dotfiles fetch origin
-dotfiles branch --set-upstream-to=origin/master master
+Dotfiles setup failed with error: ${exit_code}
+ERROR
+    #####
+  fi
+}
+trap finish EXIT
 
-# Because `git clone --bare` does not check out the working tree and create
-# the index, the staging area at this point will appear to indicate that all
-# files tracked by the repo are staged for removal. To address this, reset the
-# index and update the working tree by populating the files from the repo. By
-# default, `git reset` will not overwrite pre-existing files in the working
-# tree. This is better than using `git checkout`, which fails when there are
-# any pre-existing files.
-dotfiles reset HEAD
+#
+# Facilitates interfacing with the dotfiles repo.
+#
 
-# Any pre-existing files that differ from those from the repo will now appear
-# to be unstaged modifications. Stash them so that their contents can later be
-# restored if desired.
-if ! dotfiles diff-index --quiet HEAD --; then
-  dotfiles stash push -m "Backup of pre-existing dotfiles"
+dotfiles() {
+  git --git-dir="${DOTFILES_GIT_DIR}" --work-tree="${HOME}" "$@"
+}
 
-  printf "\n%bThe following pre-existing files were stashed:\n" "${yellow}"
-  dotfiles stash show --name-only | sed 's/^/\t/'
-  printf "Use \`dotfiles stash\` to work with these stashed files.%b\n" "${reset}"
-fi
+#
+# Functions for providing colored output.
+#
 
-printf "\n%bDotfiles setup complete!\n" "${green}"
-printf "You may need to start a new terminal for some settings to take effect.%b\n" "${reset}"
+print_success() {
+  print_with_sgr "$(tput setaf 2)"  # Green foreground
+}
+
+print_notification() {
+  print_with_sgr "$(tput setaf 3)"  # Yellow foreground
+}
+
+print_error() {
+  >&2 print_with_sgr "$(tput setaf 1)"  # Red foreground
+}
+
+print_with_sgr() {
+  printf "%b" "$1"
+  cat
+  printf "%b" "$(tput sgr0)"  # Reset attributes
+}
+
+# Invoke the script
+main
