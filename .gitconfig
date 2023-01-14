@@ -1,0 +1,91 @@
+[push]
+	default = current
+[rerere]
+	enabled = true
+[core]
+	precomposeunicode = true
+	excludesfile = ~/.gitignore_global
+[user]
+	email = claw@alum.mit.edu
+	name = Clyde Law
+	signingkey = C228C4AA0DD8C95D
+[commit]
+	gpgSign = true
+[tag]
+	gpgSign = true
+[push]
+	gpgSign = if-asked
+[color]
+	ui = true
+[alias]
+	amend = commit --amend
+	bn = branch-name
+	branch-mv = branch -f
+	branch-name = !"git rev-parse --abbrev-ref \"${1:-HEAD}\" #"
+	co = checkout
+	co- = checkout -
+	cob = checkout -b
+	com = checkout master
+	delete-stale = !"for branch in $(git for-each-ref --format '%(refname:short) %(upstream:track)' refs/heads | awk '$2 == \"[gone]\" {print $1}'); do git branch -D ${branch}; done #"
+	dc = diff-commit
+	dfork = diff-fork
+	diff-commit = !"git diff \"${1:-HEAD}\"^! #"
+	diff-fork = !git diff $(git forkpt)
+	diff-staged = diff --cached
+	ds = diff-staged
+	exec = !"exec "
+	fork-point = merge-base --fork-point master
+	forkpt = fork-point
+	lg = log --graph --pretty='format:%C(auto)%h%C(magenta)% G?%C(cyan)%<(16)% ad%C(green)%<(12,trunc)% aN%C(reset)% s%C(auto)%+d' --date=human-local
+	lgfp = lg --first-parent
+	main = !"git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@' #"
+	prefix = exec bash -c 'echo ${GIT_PREFIX}'
+	pub = publish
+	publish = !git push -u origin $(git bn)
+	pushf = push --force-with-lease
+	rba = rebase --abort
+	rbc = rebase --continue
+	rbi = rebase --interactive --autosquash
+	rbm = rebase --autostash origin/master
+	rbs = rebase --skip
+	root = rev-parse --show-toplevel
+	rpo = remote prune origin
+	sdiff = stash show -p
+	sdrop = stash drop
+	sha = !"git rev-parse \"${1:-HEAD}\" #"
+	slist = stash list
+	spop = stash pop
+	sshow = stash show
+	st = status --short --branch
+	sync = !"if [ $# -eq 0 ]; then set -- master; fi; for branch in \"${@}\"; do git fetch origin \"${branch}:${branch}\"; done #"
+	unstage = reset HEAD --
+	up = pull --all --autostash --prune --rebase
+[diff]
+	colorMoved = default
+	tool = icdiff
+[difftool]
+	prompt = false
+[difftool "icdiff"]
+	cmd = icdiff --line-numbers $LOCAL $REMOTE
+[merge]
+	conflictstyle = diff3
+[protocol]
+	version = 2
+[pager]
+	blame = delta
+	diff = delta
+	log = delta
+	reflog = delta
+	show = delta
+[delta]
+	hyperlinks = true
+	light = false
+	line-numbers = true
+	navigate = true
+	side-by-side = true
+[interactive]
+	diffFilter = delta --color-only
+[add.interactive]
+	useBuiltin = false
+[include]
+	path = ~/.dotfiles/local/gitconfig
