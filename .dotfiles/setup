@@ -93,7 +93,9 @@ print_error() {
 
 print_with_sgr() {
   printf "%b" "$1"
-  cat
+  while IFS= read -r output; do
+    printf "%s\n" "${output}"
+  done
   printf "%b" "$(tput sgr0)"  # Reset attributes
 }
 
