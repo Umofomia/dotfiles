@@ -25,7 +25,7 @@
 	co = checkout
 	co- = checkout -
 	cob = checkout -b
-	com = checkout master
+	com = !git checkout $(git main)
 	delete-stale = !"for branch in $(git for-each-ref --format '%(refname:short) %(upstream:track)' refs/heads | awk '$2 == \"[gone]\" {print $1}'); do git branch -D ${branch}; done #"
 	dc = diff-commit
 	dfork = diff-fork
@@ -34,11 +34,11 @@
 	diff-staged = diff --cached
 	ds = diff-staged
 	exec = !"exec "
-	fork-point = merge-base --fork-point master
+	fork-point = !git merge-base --fork-point $(git main)
 	forkpt = fork-point
 	lg = log --graph --pretty='format:%C(auto)%h%C(magenta)% G?%C(cyan)%<(16)% ad%C(green)%<(12,trunc)% aN%C(reset)% s%C(auto)%+d' --date=human-local
 	lgfp = lg --first-parent
-	main = !"git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@' #"
+	main = !"git remote-main 2>/dev/null || git for-each-ref --format='%(refname:short)' refs/heads | grep -x main || echo master #"
 	prefix = exec bash -c 'echo ${GIT_PREFIX}'
 	pub = publish
 	publish = !git push -u origin $(git bn)
@@ -46,8 +46,9 @@
 	rba = rebase --abort
 	rbc = rebase --continue
 	rbi = rebase --interactive --autosquash
-	rbm = rebase --autostash origin/master
+	rbm = !git rebase --autostash origin/$(git main)
 	rbs = rebase --skip
+	remote-main = !"(set -o pipefail && git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@') #"
 	root = rev-parse --show-toplevel
 	rpo = remote prune origin
 	sdiff = stash show -p
@@ -57,7 +58,7 @@
 	spop = stash pop
 	sshow = stash show
 	st = status --short --branch
-	sync = !"if [ $# -eq 0 ]; then set -- master; fi; for branch in \"${@}\"; do git fetch origin \"${branch}:${branch}\"; done #"
+	sync = !"if [ $# -eq 0 ]; then set -- $(git main); fi; for branch in \"${@}\"; do git fetch origin \"${branch}:${branch}\"; done #"
 	unstage = reset HEAD --
 	up = pull --all --autostash --prune --rebase
 [diff]
