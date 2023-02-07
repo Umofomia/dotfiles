@@ -10,13 +10,13 @@ A self-contained setup script is available to automatically clone the repository
 * Using `wget`:
 
     ```sh
-    wget -O - https://raw.githubusercontent.com/Umofomia/dotfiles/master/.dotfiles/setup | sh
+    wget -O - https://raw.githubusercontent.com/Umofomia/dotfiles/master/.dotfiles/script/setup | sh
     ```
 
 * Using `curl`:
 
     ```sh
-    curl https://raw.githubusercontent.com/Umofomia/dotfiles/master/.dotfiles/setup | sh
+    curl https://raw.githubusercontent.com/Umofomia/dotfiles/master/.dotfiles/script/setup | sh
     ```
 
 ## File structure
@@ -33,5 +33,8 @@ Files are also located within the following directories:
   * `local` - Dotfiles may reference files in this directory to include configuration that is specific to the local machine.
     Files in this directory should not be checked into this repository.
     If version control is desired for these files, it is suggested that this directory be managed as a separate git repository (which doesn't need to be bare like this one).
+
+  * `script` - Executable scripts that dotfiles may make use of.
+    Also includes the `setup` script that installs this repository's dotfiles.
 
 * `.github` - Hosts the README file so that it can be displayed in GitHub [without ending up in the home directory](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes).
