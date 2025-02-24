@@ -1,0 +1,24 @@
+#!/usr/bin/awk -f
+#
+# colorcolumn - Like the `column` command, but takes into account text that
+# contains ANSI color escape sequences.
+#
+# Based on this Stack Exchange answer: https://unix.stackexchange.com/a/448471
+
+{
+  nf[NR] = NF
+  for (i = 1; i <= NF; i++) {
+    cell[NR, i] = $i
+    gsub(/\033\[([[:digit:]]+(;[[:digit:]]+)*)?m/, "", $i)
+    len[NR, i] = l = length($i)
+    if (l > max[i]) max[i] = l
+  }
+}
+
+END {
+  for (row = 1; row <= NR; row++) {
+    for (col = 1; col < nf[row]; col++)
+      printf "%s%*s%s", cell[row, col], max[col] - len[row, col], "", OFS
+    print cell[row, nf[row]]
+  }
+}
