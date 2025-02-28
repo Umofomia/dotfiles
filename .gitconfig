@@ -1,5 +1,6 @@
 [rerere]
 	enabled = true
+	autoupdate = true
 [core]
 	precomposeunicode = true
 	excludesfile = ~/.gitignore_global
@@ -11,9 +12,15 @@
 	gpgSign = true
 [tag]
 	gpgSign = true
+	sort = version:refname
+[fetch]
+	prune = true
+	pruneTags = true
+	all = true
 [push]
 	autoSetupRemote = true
 	default = current
+	followTags = true
 	gpgSign = if-asked
 [color]
 	ui = true
@@ -41,6 +48,8 @@
 	lgb = !git lg $(git main)..@
 	lgfp = lg --first-parent
 	main = !"git remote-main 2>/dev/null || git for-each-ref --format='%(refname:short)' refs/heads | grep -x main || echo master #"
+	out = outgoing
+	outgoing = log @{u}..
 	prefix = exec bash -c 'echo ${GIT_PREFIX}'
 	pub = publish
 	publish = !git push -u origin $(git bn)
@@ -67,12 +76,15 @@
 [diff]
 	colorMoved = default
 	tool = icdiff
+	algorithm = histogram
+	mnemonicPrefix = true
+	renames = true
 [difftool]
 	prompt = false
 [difftool "icdiff"]
 	cmd = icdiff --line-numbers $LOCAL $REMOTE
 [merge]
-	conflictstyle = diff3
+	conflictstyle = zdiff3
 [protocol]
 	version = 2
 [pager]
@@ -93,3 +105,7 @@
 	useBuiltin = false
 [include]
 	path = ~/.dotfiles/local/gitconfig
+[init]
+	defaultBranch = main
+[help]
+	autocorrect = prompt
