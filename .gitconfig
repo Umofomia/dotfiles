@@ -85,6 +85,12 @@
 	cmd = icdiff --line-numbers $LOCAL $REMOTE
 [merge]
 	conflictstyle = zdiff3
+	tool = intellij
+[mergetool]
+	keepBackup = false
+[mergetool "intellij"]
+	cmd = "$HOME"'/Applications/IntelliJ IDEA Ultimate.app/Contents/MacOS/idea' merge "$LOCAL" "$REMOTE" "$BASE" "$MERGED"
+	trustExitCode = true
 [protocol]
 	version = 2
 [pager]
