@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AMApplicationBuild</key>
+	<string>533</string>
+	<key>AMApplicationVersion</key>
+	<string>2.10</string>
+	<key>AMDocumentVersion</key>
+	<string>2</string>
+	<key>actions</key>
+	<array>
+		<dict>
+			<key>action</key>
+			<dict>
+				<key>AMAccepts</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Optional</key>
+					<true/>
+					<key>Types</key>
+					<array>
+						<string>com.apple.applescript.object</string>
+					</array>
+				</dict>
+				<key>AMActionVersion</key>
+				<string>1.0.2</string>
+				<key>AMApplication</key>
+				<array>
+					<string>Automator</string>
+				</array>
+				<key>AMParameterProperties</key>
+				<dict>
+					<key>source</key>
+					<dict/>
+				</dict>
+				<key>AMProvides</key>
+				<dict>
+					<key>Container</key>
+					<string>List</string>
+					<key>Types</key>
+					<array>
+						<string>com.apple.applescript.object</string>
+					</array>
+				</dict>
+				<key>ActionBundlePath</key>
+				<string>/System/Library/Automator/Run AppleScript.action</string>
+				<key>ActionName</key>
+				<string>Run AppleScript</string>
+				<key>ActionParameters</key>
+				<dict>
+					<key>source</key>
+					<string>property cancelButton : "Cancel"property closeButton : "Close"property continueButton : "Continue"property okButton : "OK"property repositionButton : "Reposition"property resizeButton : "Resize"property undoButton : "Undo"property originalState : {}on formatPosition({posX, posY})	return "(" &amp; posX &amp; ", " &amp; posY &amp; ")"end formatPositionon formatSize({sizeX, sizeY})	return "(" &amp; sizeX &amp; " × " &amp; sizeY &amp; ")"end formatSizeon promptWindowAction(currentWindow)	set windowName to name of currentWindow	set windowBounds to bounds of currentWindow	set windowResizable to resizable of currentWindow		set posX to item 1 of windowBounds	set posY to item 2 of windowBounds	set windowPos to {posX, posY}		set sizeX to (item 3 of windowBounds) - posX	set sizeY to (item 4 of windowBounds) - posY	set windowSize to {sizeX, sizeY}		if originalState = {} then		set originalState to {windowPos:windowPos, windowSize:windowSize}	end if	set originalPos to windowPos of originalState	set originalSize to windowSize of originalState		set posChanged to windowPos ≠ originalPos	set sizeChanged to windowSize ≠ originalSize		set posText to "Position: " &amp; formatPosition(originalPos)	if posChanged then		set posText to posText &amp; " → " &amp; formatPosition(windowPos)	end if		set sizeText to "Size: " &amp; formatSize(originalSize)	if sizeChanged then		set sizeText to sizeText &amp; " → " &amp; formatSize(windowSize)	end if		set dialogTitle to "Adjust Window - " &amp; windowName	set dialogText to posText &amp; linefeed &amp; sizeText	set dialogButtons to {}	if posChanged or sizeChanged then		copy undoButton to the end of dialogButtons	end if	-- Dialogs have a max of 3 buttons so the following ensures no more than 3 are displayed when the undo button appears	if windowResizable and not sizeChanged then		copy resizeButton to the end of dialogButtons	end if	if length of dialogButtons &lt; 2 then		copy repositionButton to the end of dialogButtons	end if	copy closeButton to the end of dialogButtons		set dialogResult to display dialog dialogText with title dialogTitle buttons dialogButtons default button closeButton	set action to button returned of dialogResult		return {windowPos:windowPos, windowSize:windowSize, action:action}end promptWindowActionon displayError(errorText)	display dialog errorText with title "Adjust Window - Error" buttons {okButton} default button okButtonend displayErroron promptNumber(promptText, defaultValue, requirePositive)	repeat		set promptResult to (display dialog promptText default answer defaultValue buttons {cancelButton, continueButton} default button continueButton)		try			set numericValue to text returned of promptResult as number			if requirePositive and numericValue ≤ 0 then				displayError("Please enter a positive number.")			else				return numericValue			end if		on error			displayError("Please enter a valid number.")		end try	end repeatend promptNumberon setWindowBounds(currentWindow, {posX, posY}, {sizeX, sizeY})	set bounds of currentWindow to {posX, posY, posX + sizeX, posY + sizeY}end setWindowBoundson repositionWindow(currentWindow, {posX, posY}, windowSize)	try		set newPosX to promptNumber("Set new left position:", posX, false)		set newPosY to promptNumber("Set new top position:", posY, false)		setWindowBounds(currentWindow, {newPosX, newPosY}, windowSize)	on error number -128		-- Canceled; do nothing	end tryend repositionWindowon resizeWindow(currentWindow, windowPos, {sizeX, sizeY})	try		set newSizeX to promptNumber("Set new width:", sizeX, true)		set newSizeY to promptNumber("Set new height:", sizeY, true)		setWindowBounds(currentWindow, windowPos, {newSizeX, newSizeY})	on error number -128		-- Canceled; do nothing	end tryend resizeWindowon resetWindow(currentWindow)	set originalPos to windowPos of originalState	set originalSize to windowSize of originalState	setWindowBounds(currentWindow, originalPos, originalSize)end resetWindowon run {input, parameters}	set currentApp to (path to frontmost application as text)		tell application currentApp		if (count of windows) = 0 then			my displayError("No windows available.")			return		end if				set currentWindow to front window				repeat			set promptResult to my promptWindowAction(currentWindow)						set windowPos to windowPos of promptResult			set windowSize to windowSize of promptResult			set action to action of promptResult						if action = repositionButton then				my repositionWindow(currentWindow, windowPos, windowSize)			else if action = resizeButton then				my resizeWindow(currentWindow, windowPos, windowSize)			else if action = undoButton then				my resetWindow(currentWindow)			else				exit repeat			end if		end repeat	end tellend run</string>
+				</dict>
+				<key>BundleIdentifier</key>
+				<string>com.apple.Automator.RunScript</string>
+				<key>CFBundleVersion</key>
+				<string>1.0.2</string>
+				<key>CanShowSelectedItemsWhenRun</key>
+				<false/>
+				<key>CanShowWhenRun</key>
+				<true/>
+				<key>Category</key>
+				<array>
+					<string>AMCategoryUtilities</string>
+				</array>
+				<key>Class Name</key>
+				<string>RunScriptAction</string>
+				<key>InputUUID</key>
+				<string>11DCA506-22B9-4ADF-BDD5-45672DD46AB6</string>
+				<key>Keywords</key>
+				<array>
+					<string>Run</string>
+				</array>
+				<key>OutputUUID</key>
+				<string>2744CA5E-99D6-4D02-867A-5F7185FCEC92</string>
+				<key>UUID</key>
+				<string>204E5500-2CB7-4EB5-A960-10DD44A4A2DF</string>
+				<key>UnlocalizedApplications</key>
+				<array>
+					<string>Automator</string>
+				</array>
+				<key>arguments</key>
+				<dict>
+					<key>0</key>
+					<dict>
+						<key>default value</key>
+						<string>on run {input, parameters}
+	
+	(* Your script goes here *)
+	
+	return input
+end run</string>
+						<key>name</key>
+						<string>source</string>
+						<key>required</key>
+						<string>0</string>
+						<key>type</key>
+						<string>0</string>
+						<key>uuid</key>
+						<string>0</string>
+					</dict>
+				</dict>
+				<key>isViewVisible</key>
+				<integer>1</integer>
+				<key>location</key>
+				<string>309.000000:368.000000</string>
+				<key>nibPath</key>
+				<string>/System/Library/Automator/Run AppleScript.action/Contents/Resources/Base.lproj/main.nib</string>
+			</dict>
+			<key>isViewVisible</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>connectors</key>
+	<dict/>
+	<key>workflowMetaData</key>
+	<dict>
+		<key>applicationBundleIDsByPath</key>
+		<dict/>
+		<key>applicationPaths</key>
+		<array/>
+		<key>inputTypeIdentifier</key>
+		<string>com.apple.Automator.nothing</string>
+		<key>outputTypeIdentifier</key>
+		<string>com.apple.Automator.nothing</string>
+		<key>presentationMode</key>
+		<integer>11</integer>
+		<key>processesInput</key>
+		<false/>
+		<key>serviceInputTypeIdentifier</key>
+		<string>com.apple.Automator.nothing</string>
+		<key>serviceOutputTypeIdentifier</key>
+		<string>com.apple.Automator.nothing</string>
+		<key>serviceProcessesInput</key>
+		<false/>
+		<key>systemImageName</key>
+		<string>NSActionTemplate</string>
+		<key>useAutomaticInputType</key>
+		<false/>
+		<key>workflowTypeIdentifier</key>
+		<string>com.apple.Automator.servicesMenu</string>
+	</dict>
+</dict>
+</plist>
